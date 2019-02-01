@@ -81,27 +81,27 @@ class PaymentsProcessor():
                 return item
 
     @staticmethod
-    def process_next_payment(self, bill, payments, total_project_debt):
-        firstNotProcessedPayment = PaymentsProcessor.find(lambda payment: not payment['processed'], payments)
-        if firstNotProcessedPayment is not None:
+    def process_next_payment(bill, payments, total_project_debt):
+        first_not_processed_payment = PaymentsProcessor.find(lambda payment: not payment['processed'], payments)
+        if first_not_processed_payment is not None:
             print('      Next payment exists: ' + str(first_not_processed_payment['amount']))
-            if (firstNotProcessedPayment['unpaidAmount'] is None):
-                amount = firstNotProcessedPayment['amount']
+            if first_not_processed_payment['unpaidAmount'] is None:
+                amount = first_not_processed_payment['amount']
             else:
-                amount = firstNotProcessedPayment['unpaidAmount']
+                amount = first_not_processed_payment['unpaidAmount']
 
-            if (amount > bill['billDebt']):
-                chargeFromPayment = bill['billDebt']
-                firstNotProcessedPayment['unpaidAmount'] = amount - bill['billDebt']
+            if amount > bill['billDebt']:
+                charge_from_payment = bill['billDebt']
+                first_not_processed_payment['unpaidAmount'] = amount - bill['billDebt']
             else:
-                chargeFromPayment = amount
-                firstNotProcessedPayment['unpaidAmount'] = 0
-                firstNotProcessedPayment['processed'] = True
+                charge_from_payment = amount
+                first_not_processed_payment['unpaidAmount'] = 0
+                first_not_processed_payment['processed'] = True
 
-            bill['paidAmount'] = bill['paidAmount'] + chargeFromPayment
-            bill['billDebt'] = bill['billDebt'] - chargeFromPayment
-            total_project_debt = total_project_debt - chargeFromPayment
-            bill['relatedPayments'].append(firstNotProcessedPayment)
+            bill['paidAmount'] = bill['paidAmount'] + charge_from_payment
+            bill['billDebt'] = bill['billDebt'] - charge_from_payment
+            total_project_debt = total_project_debt - charge_from_payment
+            bill['relatedPayments'].append(first_not_processed_payment)
             bill['isPaidOff'] = (bill['billDebt'] <= 0)
             bill['lastPaymentDate'] = first_not_processed_payment['date']
             bill['delayInPayment'] = (bill['lastPaymentDate'] > bill['deadlineDate'])
