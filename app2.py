@@ -45,9 +45,9 @@ class PaymentsProcessor():
 
     def create_payment_list(self):
         return [
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 190, 'processed': False},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 300, 'processed': False},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False}
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 190, 'processed': False, 'unpaidAmount': None},
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 300, 'processed': False, 'unpaidAmount': None},
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False, 'unpaidAmount': None}
         ]
 
 
@@ -82,11 +82,22 @@ class PaymentsProcessor():
     def process_next_payment(self, bill, payments, total_project_debt):
         firstNotProcessedPayment = self.find(lambda payment: not payment['processed'], payments)
         if firstNotProcessedPayment is not None:
-            print('      Next payment exists: ' + str(firstNotProcessedPayment['amount']))
-            bill['paidAmount'] = bill['paidAmount'] + firstNotProcessedPayment['amount']
-            bill['billDebt'] = bill['billDebt'] - firstNotProcessedPayment['amount']
-            total_project_debt = total_project_debt - firstNotProcessedPayment['amount']
-            firstNotProcessedPayment['processed'] = True
+            if (firstNotProcessedPayment['unpaidAmount'] is None):
+                amount = firstNotProcessedPayment['amount']
+            else:
+                amount = firstNotProcessedPayment['unpaidAmount']
+
+            if (amount > bill['billDebt']):
+                chargeFromPayment = bill['billDebt']
+                firstNotProcessedPayment['unpaidAmount'] = amount - bill['billDebt']
+            else:
+                chargeFromPayment = amount
+                firstNotProcessedPayment['unpaidAmount'] = 0
+                firstNotProcessedPayment['processed'] = True
+
+            bill['paidAmount'] = bill['paidAmount'] + chargeFromPayment
+            bill['billDebt'] = bill['billDebt'] - chargeFromPayment
+            total_project_debt = total_project_debt - chargeFromPayment
             bill['relatedPayments'].append(firstNotProcessedPayment)
             bill['isPaidOff'] = (bill['billDebt'] <= 0)
             bill['lastPaymentDate'] = firstNotProcessedPayment['date']
@@ -97,6 +108,7 @@ class PaymentsProcessor():
                 total_project_debt = self.process_next_payment(bill, payments, total_project_debt)
             if (bill['billDebt'] < firstNotProcessedPayment['amount']):
                 bill['paidOver'] = firstNotProcessedPayment['amount'] - bill['billDebt']
+
         else:
             print('      Next payment doesnt exist')
         return total_project_debt
