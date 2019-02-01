@@ -11,54 +11,43 @@ class PaymentsProcessor():
             print('********************************')
             print('# Processing data for project: ' + project_id)
             print('********************************')
-            debt = 0.0
+
+            total_project_debt = 0.0
             for bill in bill_by_project_group:
                 print('   ----------------------------')
                 print('   Processing bill: ' + str(bill['amount']))
-                debt = debt + bill['amount']
-                print('   Total debt before payment processing: ' + str(debt))
+
+                bill['billDebt'] = bill['amount']
+                total_project_debt = total_project_debt + bill['amount']
+
+                print('   Total project debt before payment processing: ' + str(total_project_debt))
+                print('   Total bill debt before payment processing: ' + str(bill['billDebt']))
+
                 project_payments = self.group_uplata_by_project(payment_list)[project_id]
-                response = self.process_next_payment(bill, project_payments, debt)
-                if (response is not None):
-                    debt = response['debt']
-                    lastPaymentDate = response['lastPaymentDate']
-                    print('      Total debt after payments processing: ' + str(debt))
-                    if (debt == 0):
-                        bill['isplaceno'] = True
-                        bill['debt'] = 0
-                        bill['pretplata'] = 0
-                        bill['delayInPayment'] = (lastPaymentDate > bill['deadlineDate'])
-                        if (bill['delayInPayment']):
-                            bill['daysOfDelay'] = (bill['deadlineDate'] - lastPaymentDate).days
-                    elif (debt > 0):
-                        bill['isplaceno'] = False
-                        bill['debt'] = debt
-                        bill['pretplata'] = 0
-                    else:
-                        bill['isplaceno'] = True
-                        bill['debt'] = 0
-                        bill['pretplata'] = abs(debt)
-                        bill['delayInPayment'] = (lastPaymentDate > bill['deadlineDate'])
-                        if (bill['delayInPayment']):
-                            bill['daysOfDelay'] = (bill['deadlineDate'] - lastPaymentDate).days
+                total_project_debt = self.process_next_payment(bill, project_payments, total_project_debt)
+
+                print('   Total bill debt after payments processing: ' + str(bill['billDebt']))
+                print('   Bill isPaidOff: ' + str(bill['isPaidOff']))
                 print('   ----------------------------')
+
+        print('Total project debt: ' + str(total_project_debt))
         self.print_results(bill_list, payment_list)
 
 
     def create_bill_list(self):
         return [
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 1, 1), 'deadlineDate': datetime.date(2019, 1, 10), 'amount': 200, 'isplaceno': False, 'delayInPayment': None, 'daysOfDelay': None, 'debt': None, 'pretplata': None, 'relatedPayments': []},
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 2, 1), 'deadlineDate': datetime.date(2019, 2, 10), 'amount': 300, 'isplaceno': False, 'delayInPayment': None, 'daysOfDelay': None, 'debt': None, 'pretplata': None, 'relatedPayments': []},
-            {'projectId': 'project2', 'createdDate': datetime.date(2019, 3, 1), 'deadlineDate': datetime.date(2019, 3, 10), 'amount': 400, 'isplaceno': False, 'delayInPayment': None, 'daysOfDelay': None, 'debt': None, 'pretplata': None, 'relatedPayments': []}
+            {'projectId': 'project1', 'createdDate': datetime.date(2019, 1, 1), 'deadlineDate': datetime.date(2019, 1, 10), 'amount': 200, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []},
+            {'projectId': 'project1', 'createdDate': datetime.date(2019, 2, 1), 'deadlineDate': datetime.date(2019, 2, 10), 'amount': 300, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []},
+            {'projectId': 'project1', 'createdDate': datetime.date(2019, 3, 1), 'deadlineDate': datetime.date(2019, 3, 10), 'amount': 400, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []}
 
         ]
 
 
     def create_payment_list(self):
         return [
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 50, 'processed': False},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 130, 'processed': False},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 100, 'processed': False}
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 190, 'processed': False},
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 300, 'processed': False},
+            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False}
         ]
 
 
@@ -90,28 +79,27 @@ class PaymentsProcessor():
                 return item
 
 
-    def process_next_payment(self, bill, payments, debt):
+    def process_next_payment(self, bill, payments, total_project_debt):
         firstNotProcessedPayment = self.find(lambda payment: not payment['processed'], payments)
-        response = None
-        payment_date = None
-        newDebt = debt
         if firstNotProcessedPayment is not None:
             print('      Next payment exists: ' + str(firstNotProcessedPayment['amount']))
+            bill['paidAmount'] = bill['paidAmount'] + firstNotProcessedPayment['amount']
+            bill['billDebt'] = bill['billDebt'] - firstNotProcessedPayment['amount']
+            total_project_debt = total_project_debt - firstNotProcessedPayment['amount']
             firstNotProcessedPayment['processed'] = True
             bill['relatedPayments'].append(firstNotProcessedPayment)
-            debt = debt - firstNotProcessedPayment['amount']
-            print('      New debt: ' + str(debt))
-            if (debt <= 0):
-                payment_date = firstNotProcessedPayment['date']
-            else:
-                response = self.process_next_payment(bill, payments, debt)
-                if (response is not None):
-                    debt = response['debt']
-                    payment_date = response['lastPaymentDate']
-            response = {"debt": debt, "lastPaymentDate": payment_date}
+            bill['isPaidOff'] = (bill['billDebt'] <= 0)
+            bill['lastPaymentDate'] = firstNotProcessedPayment['date']
+            bill['delayInPayment'] = (bill['lastPaymentDate'] > bill['deadlineDate'])
+            if (bill['delayInPayment']):
+                bill['daysOfDelay'] = (bill['deadlineDate'] - bill['lastPaymentDate']).days
+            if (bill['billDebt'] > 0):
+                total_project_debt = self.process_next_payment(bill, payments, total_project_debt)
+            if (bill['billDebt'] < firstNotProcessedPayment['amount']):
+                bill['paidOver'] = firstNotProcessedPayment['amount'] - bill['billDebt']
         else:
             print('      Next payment doesnt exist')
-        return response
+        return total_project_debt
 
 
     def print_results(self, bills, payments):
