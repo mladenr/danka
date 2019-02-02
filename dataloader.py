@@ -19,7 +19,7 @@ class DataLoader:
         return [
             {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 190, 'processed': False, 'unpaidAmount': None},
             {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 300, 'processed': False, 'unpaidAmount': None},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False, 'unpaidAmount': None}
+            {'projectId': 'project2', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False, 'unpaidAmount': None}
         ]
 
     @staticmethod
