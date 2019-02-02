@@ -1,12 +1,12 @@
-import datetime
 import collections
 import pprint
+from dataloader import DataLoader
 
 
 class PaymentsProcessor():
     def main(self):
-        bill_list = PaymentsProcessor.create_bill_list()
-        payment_list = PaymentsProcessor.create_payment_list()
+        bill_list = DataLoader.load_bill_list_from_excel()
+        payment_list = DataLoader.load_payment_list_from_excel()
 
         for project_id, bill_by_project_group in PaymentsProcessor.group_bill_by_project(bill_list).items():
             print('********************************')
@@ -25,7 +25,7 @@ class PaymentsProcessor():
                 print('   Total bill debt before payment processing: ' + str(bill['billDebt']))
 
                 project_payments = PaymentsProcessor.group_uplata_by_project(payment_list)[project_id]
-                total_project_debt = PaymentsProcessor.process_next_payment(bill, project_payments, total_project_debt)
+                total_project_debt = PaymentsProcessor.process_bill(bill, project_payments, total_project_debt)
 
                 print('   Total bill debt after payments processing: ' + str(bill['billDebt']))
                 print('   Bill isPaidOff: ' + str(bill['isPaidOff']))
@@ -35,27 +35,9 @@ class PaymentsProcessor():
         self.print_results(bill_list, payment_list)
 
     @staticmethod
-    def create_bill_list():
-        return [
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 1, 1), 'deadlineDate': datetime.date(2019, 1, 10), 'amount': 200, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []},
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 2, 1), 'deadlineDate': datetime.date(2019, 2, 10), 'amount': 300, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []},
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 3, 1), 'deadlineDate': datetime.date(2019, 3, 10), 'amount': 400, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'pretplata': None, 'relatedPayments': []}
-
-        ]
-
-    @staticmethod
-    def create_payment_list():
-        return [
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 12), 'amount': 190, 'processed': False, 'unpaidAmount': None},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 14), 'amount': 300, 'processed': False, 'unpaidAmount': None},
-            {'projectId': 'project1', 'date': datetime.date(2019, 1, 15), 'amount': 500, 'processed': False, 'unpaidAmount': None}
-        ]
-
-    @staticmethod
     def group_bill_by_project(bill_list):
         grouped_bill_by_project = collections.defaultdict(list)
-        for item in bill_list:
-            grouped_bill_by_project[item['projectId']].append(item)
+        for item in bill_list: grouped_bill_by_project[item['projectId']].append(item)
 #        for project_id, bill_by_project_group in grouped_bill_by_project.items():
 #            print
 #            print(project_id)
@@ -81,7 +63,7 @@ class PaymentsProcessor():
                 return item
 
     @staticmethod
-    def process_next_payment(bill, payments, total_project_debt):
+    def process_bill(bill, payments, total_project_debt):
         first_not_processed_payment = PaymentsProcessor.find(lambda payment: not payment['processed'], payments)
         if first_not_processed_payment is not None:
             print('      Next payment exists: ' + str(first_not_processed_payment['amount']))
@@ -108,7 +90,7 @@ class PaymentsProcessor():
             if bill['delayInPayment']:
                 bill['daysOfDelay'] = (bill['deadlineDate'] - bill['lastPaymentDate']).days
             if bill['billDebt'] > 0:
-                total_project_debt = PaymentsProcessor.process_next_payment(bill, payments, total_project_debt)
+                total_project_debt = PaymentsProcessor.process_bill(bill, payments, total_project_debt)
             if bill['billDebt'] < first_not_processed_payment['amount']:
                 bill['paidOver'] = first_not_processed_payment['amount'] - bill['billDebt']
         else:
