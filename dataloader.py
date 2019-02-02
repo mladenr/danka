@@ -24,7 +24,7 @@ class DataLoader:
 
     @staticmethod
     def load_bill_list_from_excel():
-        data = pd.read_excel('bills.xlsx')
+        data = pd.read_excel('data/bills.xlsx')
         json_string = data.to_json(orient='records')
         bill_list = json.loads(json_string)
         for bill in bill_list:
@@ -37,7 +37,7 @@ class DataLoader:
 
     @staticmethod
     def load_payment_list_from_excel():
-        data = pd.read_excel('payments.xlsx')
+        data = pd.read_excel('data/payments.xlsx')
         json_string = data.to_json(orient='records')
         payment_list = json.loads(json_string)
         for payment in payment_list:

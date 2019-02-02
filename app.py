@@ -1,14 +1,14 @@
-import collections
 import pprint
 from dataloader import DataLoader
+from utils import GroupUtils
 
 
-class PaymentsProcessor():
+class PaymentsProcessor:
     def main(self):
         bill_list = DataLoader.load_bill_list_from_excel()
         payment_list = DataLoader.load_payment_list_from_excel()
 
-        for project_id, bill_by_project_group in PaymentsProcessor.group_bill_by_project(bill_list).items():
+        for project_id, bill_by_project_group in GroupUtils.group_bill_by_project(bill_list).items():
             print('********************************')
             print('# Processing data for project: ' + project_id)
             print('********************************')
@@ -24,7 +24,7 @@ class PaymentsProcessor():
                 print('   Total project debt before payment processing: ' + str(total_project_debt))
                 print('   Total bill debt before payment processing: ' + str(bill['billDebt']))
 
-                project_payments = PaymentsProcessor.group_uplata_by_project(payment_list)[project_id]
+                project_payments = GroupUtils.group_payment_by_project(payment_list)[project_id]
                 total_project_debt = PaymentsProcessor.process_bill(bill, project_payments, total_project_debt)
 
                 print('   Total bill debt after payments processing: ' + str(bill['billDebt']))
@@ -33,27 +33,6 @@ class PaymentsProcessor():
 
         print('Total project debt: ' + str(total_project_debt))
         self.print_results(bill_list, payment_list)
-
-    @staticmethod
-    def group_bill_by_project(bill_list):
-        grouped_bill_by_project = collections.defaultdict(list)
-        for item in bill_list: grouped_bill_by_project[item['projectId']].append(item)
-#        for project_id, bill_by_project_group in grouped_bill_by_project.items():
-#            print
-#            print(project_id)
-#            print(bill_by_project_group)
-        return grouped_bill_by_project
-
-    @staticmethod
-    def group_uplata_by_project(uplata_list):
-        grouped_uplata_by_project = collections.defaultdict(list)
-        for item in uplata_list:
-            grouped_uplata_by_project[item['projectId']].append(item)
-#        for project_id, uplata_by_project_group in grouped_uplata_by_project.items():
-#            print
-#            print(project_id)
-#            print(uplata_by_project_group)
-        return grouped_uplata_by_project
 
     @staticmethod
     def find(f, seq):
