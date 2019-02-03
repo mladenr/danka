@@ -9,7 +9,7 @@ class DataLoader:
     def create_bill_list():
         return [
             {'projectId': 'project1', 'createdDate': datetime.date(2019, 1, 1), 'deadlineDate': datetime.date(2019, 1, 10), 'amount': 200, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'relatedPayments': []},
-            {'projectId': 'project1', 'createdDate': datetime.date(2019, 2, 1), 'deadlineDate': datetime.date(2019, 2, 10), 'amount': 300, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'relatedPayments': []},
+            {'projectId': 'project1', 'createdDate': datetime.date(2019, 2, 1), 'deadlineDate': datetime.date(2019, 2, 10), 'amount': 3000, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'relatedPayments': []},
             {'projectId': 'project1', 'createdDate': datetime.date(2019, 3, 1), 'deadlineDate': datetime.date(2019, 3, 10), 'amount': 400, 'paidAmount': 0, 'paidOver': 0, 'isPaidOff': False, 'lastPaymentDate': None, 'delayInPayment': None, 'daysOfDelay': None, 'totalDebt': None, 'relatedPayments': []}
 
         ]

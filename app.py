@@ -1,3 +1,4 @@
+import pandas as pd
 from pprint import pprint
 from dataloader import DataLoader
 from utils import GroupUtils
@@ -37,6 +38,7 @@ class PaymentsProcessor:
 
         print('Total project debt: ' + str(total_project_debt))
         self.print_results(bill_list, payment_list)
+        dataFrame = pd.DataFrame(bill_list)
 
     @staticmethod
     def findFirst(f, seq):
